@@ -1,2 +1,2 @@
-# principles-of-ds-portfolio-individual
-Principles of data science portfolio-individual project
+# principles-of-ds-portfolio
+Principles of data science portfolio
