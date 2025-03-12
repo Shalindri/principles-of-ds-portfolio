@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWPLR Prediction</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        .container {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            margin: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: #ffffff;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #007BFF;
+            color: white;
+        }
+
+        input {
+            width: 90%;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .btn {
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            background: #218838;
+        }
+
+        .prediction {
+            margin-top: 20px;
+            padding: 15px;
+            background: #fff;
+            border-radius: 5px;
+            box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+            text-align: left;
+        }
+
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+
+        .month {
+            font-weight: bold;
+            color: #007BFF;
+        }
+    </style>
+    <script>
+        async function getPrediction() {
+            let sequence = [];
+            for (let i = 1; i <= 6; i++) {
+                let timestep = {
+                    AWPLR: parseFloat(document.getElementById("AWPLR" + i).value),
+                    NCPI_Headline: parseFloat(document.getElementById("NCPI_Headline" + i).value),
+                    NCPI_Core: parseFloat(document.getElementById("NCPI_Core" + i).value),
+                    CCPI_Headline: parseFloat(document.getElementById("CCPI_Headline" + i).value),
+                };
+                sequence.push(timestep);
+            }
+
+            let response = await fetch("/predict", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ sequence: sequence })
+            });
+
+            let result = await response.json();
+            let output = document.getElementById("prediction");
+
+            if (result.predicted_awplr) {
+                output.innerHTML = "<h3>Predicted AWPLR for Next 6 Months:</h3>";
+                result.predicted_awplr.forEach((val, index) => {
+                    output.innerHTML += `<p class="month">Month ${index + 1}: <strong>${val.toFixed(2)}</strong></p>`;
+                });
+            } else {
+                output.innerHTML = `<h3 class="error">Error: ${result.error}</h3>`;
+            }
+        }
+    </script>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Enter Last 6 Months of Data to Predict Next 6 Months AWPLR</h2>
+        <form onsubmit="event.preventDefault(); getPrediction();">
+            <table>
+                <tr>
+                    <th>Time Step</th>
+                    <th>AWPLR</th>
+                    <th>NCPI_Headline</th>
+                    <th>NCPI_Core</th>
+                    <th>CCPI_Headline</th>
+                </tr>
+                <!-- Generate 6 rows for input -->
+                <script>
+                    for (let i = 1; i <= 6; i++) {
+                        document.write(`
+                            <tr>
+                                <td>${i}</td>
+                                <td><input type="text" id="AWPLR${i}" required></td>
+                                <td><input type="text" id="NCPI_Headline${i}" required></td>
+                                <td><input type="text" id="NCPI_Core${i}" required></td>
+                                <td><input type="text" id="CCPI_Headline${i}" required></td>
+                            </tr>
+                        `);
+                    }
+                </script>
+            </table>
+            <button type="submit" class="btn">Predict</button>
+        </form>
+        <div id="prediction" class="prediction"></div>
+    </div>
+
+</body>
+</html>
